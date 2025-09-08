@@ -49,6 +49,13 @@ const operations = [
       chainid: 'BTC',
       address: 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq'
     }
+  },
+  {
+    name: 'btcusdt_price',
+    type: 'binance',
+    params: {
+      symbol: 'BTCUSDT'
+    }
   }
 ];
 

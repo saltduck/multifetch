@@ -128,6 +128,24 @@ async function fetch(operations) {
         }
       }
       
+      case 'binance': {
+        if (!operation.params || !operation.params.symbol) {
+          throw new Error('binance 操作缺少 "symbol" 参数。');
+        }
+        const { symbol } = operation.params;
+        try {
+          const response = await global.fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
+          if (!response.ok) {
+            throw new Error(`HTTP 错误！状态: ${response.status}`);
+          }
+          const data = await response.json();
+          value = data.price;
+          break;
+        } catch (error) {
+          throw new Error(`获取币安 ${symbol} 价格失败: ${error.message}`);
+        }
+      }
+
       default:
         // 如果操作类型不被支持，则抛出错误
         throw new Error(`不支持的操作类型: "${operation.type}"`);
