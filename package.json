@@ -1,5 +1,5 @@
 {
-  "name": "multifetch",
+  "name": "bcfetch",
   "version": "0.0.1",
   "description": "A Node.js library to perform multiple fetch operations based on type.",
   "main": "index.js",
