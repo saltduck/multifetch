@@ -1,0 +1,22 @@
+{
+  "name": "multifetch",
+  "version": "0.0.1",
+  "description": "A Node.js library to perform multiple fetch operations based on type.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node example.js"
+  },
+  "keywords": [
+    "fetch",
+    "batch",
+    "http",
+    "blockchain",
+    "balanceOf"
+  ],
+  "author": "Gemini",
+  "license": "ISC",
+  "dependencies": {
+    "ethers": "^6.15.0",
+    "gemini-code": "^0.2.4"
+  }
+}
