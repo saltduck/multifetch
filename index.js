@@ -90,8 +90,9 @@ async function fetch(operations) {
               throw new Error(`HTTP 错误！状态: ${response.status}`);
             }
             const data = await response.json();
-            const balance = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
-            value = balance.toString(); // 余额单位：聪
+            const balanceInSatoshi = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
+            const balanceInBTC = balanceInSatoshi / 100000000;
+            value = balanceInBTC.toFixed(8); // 转换为BTC并保留8位小数
             break;
           } catch (error) {
             throw new Error(`获取 BTC 地址 ${address} 余额失败: ${error.message}`);
