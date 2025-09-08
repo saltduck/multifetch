@@ -3,10 +3,12 @@ const { fetch } = require('./index');
 // 定义一个操作数组
 const operations = [
   {
+    name: 'todo',
     type: 'http-get',
     params: { url: 'https://jsonplaceholder.typicode.com/todos/1' }
   },
   {
+    name: 'new_post',
     type: 'http-post',
     params: {
       url: 'https://jsonplaceholder.typicode.com/posts',
@@ -18,6 +20,7 @@ const operations = [
     }
   },
   {
+    name: 'usdc_balance',
     type: 'balanceOf',
     params: {
       chainid: 1, // 以太坊主网
@@ -26,6 +29,7 @@ const operations = [
     }
   },
   {
+    name: 'cake_balance',
     type: 'balanceOf',
     params: {
       chainid: 56, // BNB Chain
@@ -34,8 +38,17 @@ const operations = [
     }
   },
   {
+    name: 'user_data',
     type: 'http-get',
     params: { url: 'https://jsonplaceholder.typicode.com/users/1' }
+  },
+  {
+    name: 'btc_balance',
+    type: 'balanceOf',
+    params: {
+      chainid: 'BTC',
+      address: 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq'
+    }
   }
 ];
 
@@ -47,12 +60,14 @@ async function main() {
     console.log('所有操作成功完成！');
     console.log('结果:');
     results.forEach((result, index) => {
-      console.log(`--- 操作 ${index + 1} (${operations[index].type}) 的结果 ---`);
+      const name = Object.keys(result)[0];
+      const value = result[name];
+      console.log(`--- 操作 ${index + 1} (name: ${name}, type: ${operations[index].type}) 的结果 ---`);
       // 尝试将结果解析为JSON以美化输出，如果失败则直接打印字符串
       try {
-        console.log(JSON.parse(result));
+        console.log(JSON.parse(value));
       } catch (e) {
-        console.log(result);
+        console.log(value);
       }
       console.log('--------------------------------------------------\n');
     });
@@ -62,5 +77,6 @@ async function main() {
 }
 
 main();
+
 
 

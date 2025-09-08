@@ -32,10 +32,11 @@ async function fetch(operations) {
 
   // 为每个操作对象创建一个 promise
   const promises = operations.map(async (operation) => {
-    if (!operation || typeof operation.type !== 'string') {
-      throw new Error(`无效的操作对象: ${JSON.stringify(operation)}`);
+    if (!operation || typeof operation.type !== 'string' || !operation.name) {
+      throw new Error(`无效的操作对象或缺少 "name" 字段: ${JSON.stringify(operation)}`);
     }
 
+    let value;
     // 根据类型执行不同的操作
     switch (operation.type) {
       case 'http-get': {
@@ -47,7 +48,8 @@ async function fetch(operations) {
           if (!response.ok) {
             throw new Error(`HTTP 错误！状态: ${response.status}`);
           }
-          return response.text();
+          value = await response.text();
+          break;
         } catch (error) {
           throw new Error(`请求 ${operation.params.url} 失败: ${error.message}`);
         }
@@ -68,7 +70,8 @@ async function fetch(operations) {
           if (!response.ok) {
             throw new Error(`HTTP 错误！状态: ${response.status}`);
           }
-          return response.text();
+          value = await response.text();
+          break;
         } catch (error) {
           throw new Error(`向 ${operation.params.url} 发送 POST 请求失败: ${error.message}`);
         }
@@ -76,8 +79,27 @@ async function fetch(operations) {
 
       case 'balanceOf': {
         const { chainid, contract, address } = operation.params || {};
-        if (!chainid || !contract || !address) {
-          throw new Error('balanceOf 操作需要 "chainid", "contract", 和 "address" 参数。');
+        if (!chainid || !address) {
+          throw new Error('balanceOf 操作需要 "chainid" 和 "address" 参数。');
+        }
+        
+        if (chainid === 'BTC') {
+          try {
+            const response = await global.fetch(`https://blockstream.info/api/address/${address}`);
+            if (!response.ok) {
+              throw new Error(`HTTP 错误！状态: ${response.status}`);
+            }
+            const data = await response.json();
+            const balance = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
+            value = balance.toString(); // 余额单位：聪
+            break;
+          } catch (error) {
+            throw new Error(`获取 BTC 地址 ${address} 余额失败: ${error.message}`);
+          }
+        }
+
+        if (!contract) {
+          throw new Error('balanceOf 操作需要 "contract" 参数。');
         }
 
         const provider = providers[chainid];
@@ -95,7 +117,8 @@ async function fetch(operations) {
           ]);
           
           // 根据小数位数格式化余额
-          return ethers.formatUnits(balance, decimals);
+          value = ethers.formatUnits(balance, decimals);
+          break;
         } catch (error) {
           // 增强错误日志
           console.error(`详细错误信息 (balanceOf):`, error);
@@ -108,6 +131,7 @@ async function fetch(operations) {
         // 如果操作类型不被支持，则抛出错误
         throw new Error(`不支持的操作类型: "${operation.type}"`);
     }
+    return { [operation.name]: value };
   });
 
   // 等待所有 promise 完成并返回结果数组
