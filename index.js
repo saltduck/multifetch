@@ -154,14 +154,14 @@ async function fetch(operations) {
       }
 
       case 'lpPrice': {
-        const { chainId, contract, reverse } = operation.params || {};
-        if (!chainId || !contract) {
-          throw new Error('lpPrice 操作需要 "chainId" 和 "contract" 参数。');
+        const { chainid, contract, reverse } = operation.params || {};
+        if (!chainid || !contract) {
+          throw new Error('lpPrice 操作需要 "chainid" 和 "contract" 参数。');
         }
 
-        const provider = providers[chainId];
+        const provider = providers[chainid];
         if (!provider) {
-          throw new Error(`不支持的 chainId: "${chainId}"。支持的 chainId 有: ${Object.keys(providers).join(', ')}.`);
+          throw new Error(`不支持的 chainid: "${chainid}"。支持的 chainid 有: ${Object.keys(providers).join(', ')}.`);
         }
 
         try {
@@ -202,7 +202,7 @@ async function fetch(operations) {
           value = price.toString();
           break;
         } catch (error) {
-          throw new Error(`在链 ${chainId} 上为 LP 合约 ${contract} 计算价格失败: ${error.message}`);
+          throw new Error(`在链 ${chainid} 上为 LP 合约 ${contract} 计算价格失败: ${error.message}`);
         }
       }
 

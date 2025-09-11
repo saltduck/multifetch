@@ -1,6 +1,6 @@
 {
   "name": "bcfetch",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A Node.js library to perform multiple fetch operations based on type, including AMM LP token price calculations.",
   "main": "index.js",
   "scripts": {

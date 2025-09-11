@@ -61,7 +61,7 @@ const operations = [
     name: 'usdc_weth_price',
     type: 'lpPrice',
     params: {
-      chainId: 1, // 以太坊主网
+      chainid: 1, // 以太坊主网
       contract: '0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc', // USDC/WETH Uniswap V2 LP 合约
       reverse: false // 计算 USDC/WETH 价格 (token0/token1)
     }
@@ -70,7 +70,7 @@ const operations = [
     name: 'weth_usdc_price',
     type: 'lpPrice',
     params: {
-      chainId: 1, // 以太坊主网
+      chainid: 1, // 以太坊主网
       contract: '0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc', // USDC/WETH Uniswap V2 LP 合约
       reverse: true // 计算 WETH/USDC 价格 (token1/token0)
     }
