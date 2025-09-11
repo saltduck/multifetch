@@ -112,9 +112,19 @@ async function fetch(operations) {
               throw new Error(`HTTP 错误！状态: ${response.status}`);
             }
             const data = await response.json();
-            const balanceInSatoshi = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
-            const balanceInBTC = balanceInSatoshi / 100000000;
-            value = balanceInBTC.toFixed(8); // 转换为BTC并保留8位小数
+            
+            // 计算已确认交易的余额
+            const confirmedBalance = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
+            console.log('已确认交易的余额:', confirmedBalance);
+
+            // 计算未确认交易的余额
+            const unconfirmedBalance = data.mempool_stats.funded_txo_sum - data.mempool_stats.spent_txo_sum;
+            console.log('未确认交易的余额:', unconfirmedBalance);
+            
+            // 总余额 = 已确认余额 + 未确认余额
+            const totalBalanceInSatoshi = confirmedBalance + unconfirmedBalance;
+            const totalBalanceInBTC = totalBalanceInSatoshi / 100000000;
+            value = totalBalanceInBTC.toFixed(8); // 转换为BTC并保留8位小数
             break;
           } catch (error) {
             throw new Error(`获取 BTC 地址 ${address} 余额失败: ${error.message}`);
