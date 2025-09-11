@@ -3,7 +3,7 @@
 [![npm version](https://badge.fury.io/js/bcfetch.svg)](https://badge.fury.io/js/bcfetch)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 
-A powerful Node.js library to perform multiple fetch operations based on type, including HTTP requests, blockchain data fetching, and AMM LP token price calculations.
+A powerful library to perform multiple fetch operations based on type, including HTTP requests, blockchain data fetching, and AMM LP token price calculations. Supports both Node.js and browser environments.
 
 ## Features
 
@@ -11,7 +11,7 @@ A powerful Node.js library to perform multiple fetch operations based on type, i
 - 🔗 **Blockchain Integration**: Balance queries for ERC20 tokens and Bitcoin
 - 💰 **Price Data**: Binance API integration for cryptocurrency prices
 - 🏦 **AMM Support**: Calculate LP token prices for Uniswap and other AMM protocols
-- 🎯 **XPath Support**: Extract content from web pages using XPath selectors
+- 🎯 **XPath Support**: Extract content from web pages using XPath selectors (Node.js only)
 - ⚡ **Concurrent Execution**: All operations run in parallel for maximum performance
 - 🔧 **Type-based**: Easy to extend with new operation types
 
@@ -21,7 +21,22 @@ A powerful Node.js library to perform multiple fetch operations based on type, i
 npm install bcfetch
 ```
 
+### Optional Dependencies
+
+For XPath functionality (Node.js only), you may need to install Puppeteer:
+
+```bash
+npm install puppeteer
+```
+
+## Environment Support
+
+- **Node.js**: Full functionality including XPath support
+- **Browser**: All features except XPath (requires Puppeteer)
+
 ## Quick Start
+
+### Node.js Environment
 
 ```javascript
 const { fetch } = require('bcfetch');
@@ -68,6 +83,45 @@ async function main() {
 
 main();
 ```
+
+### Browser Environment
+
+For browser usage, the library automatically uses the browser-compatible version:
+
+```javascript
+// In browser, use the browser-compatible version
+const { fetch } = require('bcfetch/browser-compatible');
+
+const operations = [
+  {
+    name: 'btc_price',
+    type: 'binance',
+    params: { symbol: 'BTCUSDT' }
+  },
+  {
+    name: 'eth_balance',
+    type: 'balanceOf',
+    params: {
+      chainid: 1,
+      contract: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+      address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+    }
+  }
+];
+
+async function fetchData() {
+  try {
+    const results = await fetch(operations);
+    console.log(results);
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+}
+
+fetchData();
+```
+
+**Note**: XPath operations are not available in browser environments as they require Puppeteer.
 
 ## Supported Operations
 

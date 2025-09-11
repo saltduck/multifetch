@@ -1,3 +1,5 @@
+// 浏览器兼容版本的 bcfetch
+// 不包含 Puppeteer 和 Node.js 特定功能
 
 const { ethers } = require('ethers');
 const cheerio = require('cheerio');
@@ -5,16 +7,6 @@ const cheerio = require('cheerio');
 // 检测运行环境
 const isBrowser = typeof window !== 'undefined';
 const isNode = typeof process !== 'undefined' && process.versions && process.versions.node;
-
-// 条件加载 Puppeteer（仅在 Node.js 环境中）
-let puppeteer = null;
-if (isNode) {
-  try {
-    puppeteer = require('puppeteer');
-  } catch (error) {
-    console.warn('Puppeteer 未安装，xpath 功能将不可用。');
-  }
-}
 
 // 支持的链ID到公共RPC节点的映射
 const providers = {
@@ -37,19 +29,22 @@ const lpAbi = [
 ];
 
 /**
- * 异步处理一系列操作，根据每个操作的类型执行不同的网络请求。
- * 使用 Promise.all 来并发执行所有操作，并保持结果的原始顺序。
- *
- * @param {Array<Object>} operations - 操作对象的数组。
- * @param {string} operations[].type - 操作的类型 (例如 'http-get', 'http-post', 'balanceOf', 'lpPrice')。
- * @param {Object} operations[].params - 该操作所需的参数。
- * @returns {Promise<Array<string>>} 一个 Promise，它解析为一个字符串结果的数组，顺序与输入的操作数组相同。
- * @throws {Error} 如果输入不是一个数组，或者任何操作对象无效/类型不被支持。
+ * 浏览器兼容版本的 fetch 函数
+ * 不包含 xpath 功能（需要 Puppeteer）
+ * 
+ * @param {Array<Object>} operations - 操作对象的数组
+ * @returns {Promise<Array<string>>} 结果数组
  */
 async function fetch(operations) {
   // 验证输入是否为数组
   if (!Array.isArray(operations)) {
     throw new Error('输入必须是一个操作数组。');
+  }
+
+  // 检查是否包含 xpath 操作
+  const hasXpathOperations = operations.some(op => op.type === 'xpath');
+  if (hasXpathOperations) {
+    throw new Error('xpath 操作只能在 Node.js 环境中使用。请使用完整版本的 bcfetch 库。');
   }
 
   // 为每个操作对象创建一个 promise
@@ -221,92 +216,6 @@ async function fetch(operations) {
         }
       }
 
-      case 'xpath': {
-        const { url, xpath, attribute, waitFor = 5000 } = operation.params || {};
-        if (!url || !xpath) {
-          throw new Error('xpath 操作需要 "url" 和 "xpath" 参数。');
-        }
-        
-        // 检查是否在浏览器环境中
-        if (isBrowser) {
-          throw new Error('xpath 操作只能在 Node.js 环境中使用。在浏览器环境中请使用其他方法。');
-        }
-        
-        // 检查 Puppeteer 是否可用
-        if (!puppeteer) {
-          throw new Error('Puppeteer 未安装或不可用。xpath 功能需要 Puppeteer 支持。');
-        }
-        
-        try {
-          console.log(`🚀 启动无头浏览器访问: ${url}`);
-          
-          // 启动无头浏览器
-          const browser = await puppeteer.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
-          });
-          
-          const page = await browser.newPage();
-          
-          // 设置用户代理
-          await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-          
-          // 访问页面
-          await page.goto(url, { 
-            waitUntil: 'networkidle2',
-            timeout: 30000 
-          });
-          
-          console.log(`⏳ 等待 ${waitFor}ms 让页面内容完全加载...`);
-          await new Promise(resolve => setTimeout(resolve, waitFor));
-          
-          // 使用XPath查找元素
-          console.log(`🔍 使用XPath查找元素: ${xpath}`);
-          const elements = await page.evaluateHandle((xpath) => {
-            const result = document.evaluate(xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-            const elements = [];
-            for (let i = 0; i < result.snapshotLength; i++) {
-              elements.push(result.snapshotItem(i));
-            }
-            return elements;
-          }, xpath);
-          
-          const elementCount = await page.evaluate((elements) => elements.length, elements);
-          
-          if (elementCount === 0) {
-            throw new Error(`未找到匹配的XPath元素: ${xpath}`);
-          } else {
-            console.log(`✅ 找到 ${elementCount} 个匹配的XPath元素`);
-            
-            if (attribute) {
-              // 获取属性值
-              const attrValue = await page.evaluate((elements, attr) => {
-                return elements[0] ? elements[0].getAttribute(attr) : null;
-              }, elements, attribute);
-              
-              if (attrValue === null) {
-                throw new Error(`元素没有 "${attribute}" 属性`);
-              }
-              value = attrValue;
-            } else {
-              // 获取文本内容
-              const textContents = await page.evaluate((elements) => {
-                return elements.map(el => el.textContent?.trim()).join('\n');
-              }, elements);
-              
-              value = textContents;
-            }
-          }
-          
-          await browser.close();
-          console.log(`✅ 成功提取内容: ${value}`);
-          
-          break;
-        } catch (error) {
-          throw new Error(`xpath 操作失败: ${error.message}`);
-        }
-      }
-
       default:
         // 如果操作类型不被支持，则抛出错误
         throw new Error(`不支持的操作类型: "${operation.type}"`);
@@ -318,4 +227,11 @@ async function fetch(operations) {
   return Promise.all(promises);
 }
 
-module.exports = { fetch };
+// 导出函数
+if (typeof module !== 'undefined' && module.exports) {
+  // Node.js 环境
+  module.exports = { fetch };
+} else if (typeof window !== 'undefined') {
+  // 浏览器环境
+  window.bcfetch = { fetch };
+}

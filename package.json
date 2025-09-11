@@ -3,6 +3,7 @@
   "version": "0.5.1",
   "description": "A Node.js library to perform multiple fetch operations based on type, including AMM LP token price calculations.",
   "main": "index.js",
+  "browser": "browser-compatible.js",
   "scripts": {
     "test": "node example.js"
   },
@@ -23,7 +24,12 @@
   "dependencies": {
     "cheerio": "^1.0.0-rc.12",
     "ethers": "^6.15.0",
-    "gemini-code": "^0.2.4",
+    "gemini-code": "^0.2.4"
+  },
+  "optionalDependencies": {
+    "puppeteer": "^24.20.0"
+  },
+  "peerDependencies": {
     "puppeteer": "^24.20.0"
   }
 }
