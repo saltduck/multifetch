@@ -11,6 +11,7 @@ A powerful Node.js library to perform multiple fetch operations based on type, i
 - 🔗 **Blockchain Integration**: Balance queries for ERC20 tokens and Bitcoin
 - 💰 **Price Data**: Binance API integration for cryptocurrency prices
 - 🏦 **AMM Support**: Calculate LP token prices for Uniswap and other AMM protocols
+- 🎯 **XPath Support**: Extract content from web pages using XPath selectors
 - ⚡ **Concurrent Execution**: All operations run in parallel for maximum performance
 - 🔧 **Type-based**: Easy to extend with new operation types
 
@@ -198,6 +199,50 @@ Calculate AMM LP token prices for Uniswap and other AMM protocols.
 }
 ```
 
+### Web Scraping Operations
+
+#### `xpath`
+Extract content from web pages using XPath selectors.
+
+**Parameters:**
+- `url` (string): The URL of the web page to scrape
+- `xpath` (string): XPath selector to find elements
+- `attribute` (string, optional): Specific attribute to extract (e.g., 'href', 'src', 'class'). If not provided, returns text content.
+
+**Example:**
+```javascript
+// Extract text content from a specific element
+{
+  name: 'page_title',
+  type: 'xpath',
+  params: {
+    url: 'https://example.com',
+    xpath: '//h1[@class="title"]'
+  }
+}
+
+// Extract href attribute from links
+{
+  name: 'main_link',
+  type: 'xpath',
+  params: {
+    url: 'https://example.com',
+    xpath: '//a[@class="main-link"]',
+    attribute: 'href'
+  }
+}
+
+// Extract multiple elements' text content
+{
+  name: 'all_titles',
+  type: 'xpath',
+  params: {
+    url: 'https://example.com',
+    xpath: '//h2'
+  }
+}
+```
+
 ## API Reference
 
 ### `fetch(operations)`
@@ -214,7 +259,7 @@ Execute multiple operations concurrently and return results in the same order.
 ```javascript
 {
   name: string,        // Unique name for the operation
-  type: string,        // Operation type (http-get, http-post, balanceOf, binance, lpPrice)
+  type: string,        // Operation type (http-get, http-post, balanceOf, binance, lpPrice, xpath)
   params: object       // Operation-specific parameters
 }
 ```
@@ -296,6 +341,16 @@ const operations = [
       chainid: 1,
       contract: '0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc',
       reverse: true
+    }
+  },
+  
+  // XPath scraping
+  {
+    name: 'page_title',
+    type: 'xpath',
+    params: {
+      url: 'https://example.com',
+      xpath: '//h1'
     }
   }
 ];
@@ -402,6 +457,7 @@ checkPortfolio();
 
 - [ethers](https://www.npmjs.com/package/ethers) ^6.15.0 - Ethereum library for blockchain interactions
 - [gemini-code](https://www.npmjs.com/package/gemini-code) ^0.2.4 - Additional utilities
+- [cheerio](https://www.npmjs.com/package/cheerio) ^1.0.0-rc.12 - Server-side jQuery implementation for HTML parsing
 
 ## Supported Networks
 
@@ -436,6 +492,11 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
 
 ## Changelog
+
+### v0.4.0
+- Added `xpath` operation type for web scraping using XPath selectors
+- Added support for extracting text content and attributes from web pages
+- Added cheerio dependency for HTML parsing
 
 ### v0.3.1
 - Fixed parameter naming consistency (chainId → chainid)

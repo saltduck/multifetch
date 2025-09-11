@@ -1,5 +1,6 @@
 
 const { ethers } = require('ethers');
+const cheerio = require('cheerio');
 
 // 支持的链ID到公共RPC节点的映射
 const providers = {
@@ -203,6 +204,66 @@ async function fetch(operations) {
           break;
         } catch (error) {
           throw new Error(`在链 ${chainid} 上为 LP 合约 ${contract} 计算价格失败: ${error.message}`);
+        }
+      }
+
+      case 'xpath': {
+        const { url, xpath, attribute } = operation.params || {};
+        if (!url || !xpath) {
+          throw new Error('xpath 操作需要 "url" 和 "xpath" 参数。');
+        }
+        
+        try {
+          // 获取页面内容
+          const response = await global.fetch(url);
+          if (!response.ok) {
+            throw new Error(`HTTP 错误！状态: ${response.status}`);
+          }
+          const html = await response.text();
+          
+          // 使用cheerio解析HTML
+          const $ = cheerio.load(html);
+          
+          // 将xpath转换为cheerio选择器
+          // 简单的xpath到CSS选择器转换
+          let selector = xpath;
+          
+          // 处理常见的xpath模式
+          if (xpath.startsWith('//')) {
+            // 移除开头的 //
+            selector = xpath.substring(2);
+          }
+          
+          // 将xpath属性选择器转换为CSS选择器
+          // 例如: //h1[@class="title"] -> h1.title
+          selector = selector.replace(/\[@class="([^"]+)"\]/g, '.$1');
+          // 例如: //a[@href] -> a[href]
+          selector = selector.replace(/\[@([^=]+)\]/g, '[$1]');
+          // 例如: //a[@href="value"] -> a[href="value"]
+          selector = selector.replace(/\[@([^=]+)="([^"]+)"\]/g, '[$1="$2"]');
+          
+          // 查找元素
+          const elements = $(selector);
+          
+          if (elements.length === 0) {
+            throw new Error(`未找到匹配的选择器: ${selector} (原始xpath: ${xpath})`);
+          }
+          
+          // 如果指定了属性，返回属性值；否则返回文本内容
+          if (attribute) {
+            const attrValue = elements.attr(attribute);
+            if (attrValue === undefined) {
+              throw new Error(`元素没有 "${attribute}" 属性`);
+            }
+            value = attrValue;
+          } else {
+            // 如果找到多个元素，返回所有元素的文本内容（用换行符分隔）
+            value = elements.map((i, el) => $(el).text().trim()).get().join('\n');
+          }
+          
+          break;
+        } catch (error) {
+          throw new Error(`xpath 操作失败: ${error.message}`);
         }
       }
 

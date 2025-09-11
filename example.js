@@ -74,6 +74,23 @@ const operations = [
       contract: '0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc', // USDC/WETH Uniswap V2 LP 合约
       reverse: true // 计算 WETH/USDC 价格 (token1/token0)
     }
+  },
+  {
+    name: 'github_title',
+    type: 'xpath',
+    params: {
+      url: 'https://github.com',
+      xpath: '//h1'
+    }
+  },
+  {
+    name: 'github_links',
+    type: 'xpath',
+    params: {
+      url: 'https://github.com',
+      xpath: '//a[@class="HeaderMenu-link"]',
+      attribute: 'href'
+    }
   }
 ];
 

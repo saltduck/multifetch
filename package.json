@@ -22,6 +22,7 @@
   "license": "ISC",
   "dependencies": {
     "ethers": "^6.15.0",
-    "gemini-code": "^0.2.4"
+    "gemini-code": "^0.2.4",
+    "cheerio": "^1.0.0-rc.12"
   }
 }
