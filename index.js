@@ -3,9 +3,9 @@ const { ethers } = require('ethers');
 
 // 支持的链ID到公共RPC节点的映射
 const providers = {
-  1: new ethers.JsonRpcProvider('https://mainnet.infura.io/v3/84842078b09946638c03157f83405213'), // 以太坊主网 (公共 Infura)
+  1: new ethers.JsonRpcProvider('https://ethereum.publicnode.com'), // 以太坊主网 (PublicNode)
   56: new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/'), // 币安智能链
-  137: new ethers.JsonRpcProvider('https://rpc.ankr.com/polygon'), // Polygon
+  137: new ethers.JsonRpcProvider('https://polygon-rpc.com'), // Polygon
 };
 
 // 获取余额和代币小数位数所需的最小ERC20 ABI
@@ -14,12 +14,19 @@ const erc20Abi = [
   "function decimals() view returns (uint8)",
 ];
 
+// AMM LP 合约所需的 ABI
+const lpAbi = [
+  "function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
+  "function token0() view returns (address)",
+  "function token1() view returns (address)",
+];
+
 /**
  * 异步处理一系列操作，根据每个操作的类型执行不同的网络请求。
  * 使用 Promise.all 来并发执行所有操作，并保持结果的原始顺序。
  *
  * @param {Array<Object>} operations - 操作对象的数组。
- * @param {string} operations[].type - 操作的类型 (例如 'http-get', 'http-post', 'balanceOf')。
+ * @param {string} operations[].type - 操作的类型 (例如 'http-get', 'http-post', 'balanceOf', 'lpPrice')。
  * @param {Object} operations[].params - 该操作所需的参数。
  * @returns {Promise<Array<string>>} 一个 Promise，它解析为一个字符串结果的数组，顺序与输入的操作数组相同。
  * @throws {Error} 如果输入不是一个数组，或者任何操作对象无效/类型不被支持。
@@ -143,6 +150,59 @@ async function fetch(operations) {
           break;
         } catch (error) {
           throw new Error(`获取币安 ${symbol} 价格失败: ${error.message}`);
+        }
+      }
+
+      case 'lpPrice': {
+        const { chainId, contract, reverse } = operation.params || {};
+        if (!chainId || !contract) {
+          throw new Error('lpPrice 操作需要 "chainId" 和 "contract" 参数。');
+        }
+
+        const provider = providers[chainId];
+        if (!provider) {
+          throw new Error(`不支持的 chainId: "${chainId}"。支持的 chainId 有: ${Object.keys(providers).join(', ')}.`);
+        }
+
+        try {
+          const lpContract = new ethers.Contract(contract, lpAbi, provider);
+          
+          // 并发获取储备量和代币地址
+          const [reserves, token0Address, token1Address] = await Promise.all([
+            lpContract.getReserves(),
+            lpContract.token0(),
+            lpContract.token1()
+          ]);
+
+          const { reserve0, reserve1 } = reserves;
+          
+          // 获取代币的小数位数
+          const token0Contract = new ethers.Contract(token0Address, erc20Abi, provider);
+          const token1Contract = new ethers.Contract(token1Address, erc20Abi, provider);
+          
+          const [token0Decimals, token1Decimals] = await Promise.all([
+            token0Contract.decimals(),
+            token1Contract.decimals()
+          ]);
+
+          // 计算调整后的储备量（考虑小数位数）
+          const adjustedReserve0 = Number(ethers.formatUnits(reserve0, token0Decimals));
+          const adjustedReserve1 = Number(ethers.formatUnits(reserve1, token1Decimals));
+
+          // 根据 reverse 参数计算价格
+          let price;
+          if (reverse === true) {
+            // token1/token0 的价格
+            price = adjustedReserve1 / adjustedReserve0;
+          } else {
+            // token0/token1 的价格
+            price = adjustedReserve0 / adjustedReserve1;
+          }
+
+          value = price.toString();
+          break;
+        } catch (error) {
+          throw new Error(`在链 ${chainId} 上为 LP 合约 ${contract} 计算价格失败: ${error.message}`);
         }
       }
 
