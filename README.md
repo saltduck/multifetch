@@ -208,6 +208,7 @@ Extract content from web pages using XPath selectors.
 - `url` (string): The URL of the web page to scrape
 - `xpath` (string): XPath selector to find elements
 - `attribute` (string, optional): Specific attribute to extract (e.g., 'href', 'src', 'class'). If not provided, returns text content.
+- `waitFor` (number, optional): Wait time in milliseconds for dynamic content to load (default: 3000ms)
 
 **Example:**
 ```javascript
@@ -239,6 +240,17 @@ Extract content from web pages using XPath selectors.
   params: {
     url: 'https://example.com',
     xpath: '//h2'
+  }
+}
+
+// Extract content from dynamic page (with wait time)
+{
+  name: 'dynamic_content',
+  type: 'xpath',
+  params: {
+    url: 'https://transcription.bihelix.io/zh',
+    xpath: '/html/body/div[1]/div[2]/div/div[1]/div[1]/div[3]/div[1]/div[1]/div[2]',
+    waitFor: 5000
   }
 }
 ```

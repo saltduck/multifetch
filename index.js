@@ -1,6 +1,7 @@
 
 const { ethers } = require('ethers');
 const cheerio = require('cheerio');
+const puppeteer = require('puppeteer');
 
 // 支持的链ID到公共RPC节点的映射
 const providers = {
@@ -208,58 +209,74 @@ async function fetch(operations) {
       }
 
       case 'xpath': {
-        const { url, xpath, attribute } = operation.params || {};
+        const { url, xpath, attribute, waitFor = 5000 } = operation.params || {};
         if (!url || !xpath) {
           throw new Error('xpath 操作需要 "url" 和 "xpath" 参数。');
         }
         
         try {
-          // 获取页面内容
-          const response = await global.fetch(url);
-          if (!response.ok) {
-            throw new Error(`HTTP 错误！状态: ${response.status}`);
-          }
-          const html = await response.text();
+          console.log(`🚀 启动无头浏览器访问: ${url}`);
           
-          // 使用cheerio解析HTML
-          const $ = cheerio.load(html);
+          // 启动无头浏览器
+          const browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+          });
           
-          // 将xpath转换为cheerio选择器
-          // 简单的xpath到CSS选择器转换
-          let selector = xpath;
+          const page = await browser.newPage();
           
-          // 处理常见的xpath模式
-          if (xpath.startsWith('//')) {
-            // 移除开头的 //
-            selector = xpath.substring(2);
-          }
+          // 设置用户代理
+          await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
           
-          // 将xpath属性选择器转换为CSS选择器
-          // 例如: //h1[@class="title"] -> h1.title
-          selector = selector.replace(/\[@class="([^"]+)"\]/g, '.$1');
-          // 例如: //a[@href] -> a[href]
-          selector = selector.replace(/\[@([^=]+)\]/g, '[$1]');
-          // 例如: //a[@href="value"] -> a[href="value"]
-          selector = selector.replace(/\[@([^=]+)="([^"]+)"\]/g, '[$1="$2"]');
+          // 访问页面
+          await page.goto(url, { 
+            waitUntil: 'networkidle2',
+            timeout: 30000 
+          });
           
-          // 查找元素
-          const elements = $(selector);
+          console.log(`⏳ 等待 ${waitFor}ms 让页面内容完全加载...`);
+          await new Promise(resolve => setTimeout(resolve, waitFor));
           
-          if (elements.length === 0) {
-            throw new Error(`未找到匹配的选择器: ${selector} (原始xpath: ${xpath})`);
-          }
-          
-          // 如果指定了属性，返回属性值；否则返回文本内容
-          if (attribute) {
-            const attrValue = elements.attr(attribute);
-            if (attrValue === undefined) {
-              throw new Error(`元素没有 "${attribute}" 属性`);
+          // 使用XPath查找元素
+          console.log(`🔍 使用XPath查找元素: ${xpath}`);
+          const elements = await page.evaluateHandle((xpath) => {
+            const result = document.evaluate(xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+            const elements = [];
+            for (let i = 0; i < result.snapshotLength; i++) {
+              elements.push(result.snapshotItem(i));
             }
-            value = attrValue;
+            return elements;
+          }, xpath);
+          
+          const elementCount = await page.evaluate((elements) => elements.length, elements);
+          
+          if (elementCount === 0) {
+            throw new Error(`未找到匹配的XPath元素: ${xpath}`);
           } else {
-            // 如果找到多个元素，返回所有元素的文本内容（用换行符分隔）
-            value = elements.map((i, el) => $(el).text().trim()).get().join('\n');
+            console.log(`✅ 找到 ${elementCount} 个匹配的XPath元素`);
+            
+            if (attribute) {
+              // 获取属性值
+              const attrValue = await page.evaluate((elements, attr) => {
+                return elements[0] ? elements[0].getAttribute(attr) : null;
+              }, elements, attribute);
+              
+              if (attrValue === null) {
+                throw new Error(`元素没有 "${attribute}" 属性`);
+              }
+              value = attrValue;
+            } else {
+              // 获取文本内容
+              const textContents = await page.evaluate((elements) => {
+                return elements.map(el => el.textContent?.trim()).join('\n');
+              }, elements);
+              
+              value = textContents;
+            }
           }
+          
+          await browser.close();
+          console.log(`✅ 成功提取内容: ${value}`);
           
           break;
         } catch (error) {

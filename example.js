@@ -91,6 +91,15 @@ const operations = [
       xpath: '//a[@class="HeaderMenu-link"]',
       attribute: 'href'
     }
+  },
+  {
+    "name": "Transcription TVL",
+    "type": "xpath",
+    "params": {
+      "url": "https://transcription.bihelix.io/zh",
+      "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[1]/div[3]/div[1]/div[1]/div[2]",
+      "waitFor": 5000
+    }
   }
 ];
 
