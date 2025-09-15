@@ -6,7 +6,6 @@ const { fetch } = require('./browser-compatible');
 // 示例1: HTTP GET 请求
 const httpGetExample = [
   {
-    name: 'github_status',
     type: 'http-get',
     params: {
       url: 'https://api.github.com/status'
@@ -17,14 +16,12 @@ const httpGetExample = [
 // 示例2: 币安价格查询
 const binanceExample = [
   {
-    name: 'btc_price',
     type: 'binance',
     params: {
       symbol: 'BTCUSDT'
     }
   },
   {
-    name: 'eth_price',
     type: 'binance',
     params: {
       symbol: 'ETHUSDT'
@@ -35,7 +32,6 @@ const binanceExample = [
 // 示例3: 以太坊余额查询
 const balanceExample = [
   {
-    name: 'eth_balance',
     type: 'balanceOf',
     params: {
       chainid: 1,
@@ -48,7 +44,6 @@ const balanceExample = [
 // 示例4: LP 价格查询
 const lpPriceExample = [
   {
-    name: 'uniswap_eth_usdt_price',
     type: 'lpPrice',
     params: {
       chainid: 1,
@@ -99,7 +94,6 @@ async function runBrowserExamples() {
     try {
       const xpathExample = [
         {
-          name: 'test_xpath',
           type: 'xpath',
           params: {
             url: 'https://example.com',

@@ -49,8 +49,8 @@ async function fetch(operations) {
 
   // 为每个操作对象创建一个 promise
   const promises = operations.map(async (operation) => {
-    if (!operation || typeof operation.type !== 'string' || !operation.name) {
-      throw new Error(`无效的操作对象或缺少 "name" 字段: ${JSON.stringify(operation)}`);
+    if (!operation || typeof operation.type !== 'string') {
+      throw new Error(`无效的操作对象: ${JSON.stringify(operation)}`);
     }
 
     let value;
@@ -220,7 +220,7 @@ async function fetch(operations) {
         // 如果操作类型不被支持，则抛出错误
         throw new Error(`不支持的操作类型: "${operation.type}"`);
     }
-    return { [operation.name]: value };
+    return value;
   });
 
   // 等待所有 promise 完成并返回结果数组

@@ -4,7 +4,6 @@ const { fetch } = require('./index');
 const tvlTests = [
   // 测试1: 原始的Transcription TVL案例
   {
-    name: 'transcription_tvl_original',
     type: 'xpath',
     params: {
       url: 'https://transcription.bihelix.io/zh',
@@ -15,7 +14,6 @@ const tvlTests = [
   
 //   // 测试2: 获取页面body内容
 //   {
-//     name: 'transcription_body_content',
 //     type: 'xpath',
 //     params: {
 //       url: 'https://transcription.bihelix.io/zh',
@@ -26,7 +24,6 @@ const tvlTests = [
   
 //   // 测试3: 获取页面标题
 //   {
-//     name: 'transcription_title',
 //     type: 'xpath',
 //     params: {
 //       url: 'https://transcription.bihelix.io/zh',
@@ -122,12 +119,10 @@ async function testTranscriptionTVL() {
     console.log('📊 TVL测试结果:');
     console.log('='.repeat(80));
     
-    results.forEach((result, index) => {
-      const name = Object.keys(result)[0];
-      const value = result[name];
+    results.forEach((value, index) => {
       const operation = tvlTests[index];
       
-      console.log(`\n🔍 测试 ${index + 1}: ${name}`);
+      console.log(`\n🔍 测试 ${index + 1}:`);
       console.log(`   XPath: ${operation.params.xpath}`);
       console.log(`   原始结果: ${value}`);
       console.log(`   原始结果长度: ${value ? value.length : 0} 字符`);
