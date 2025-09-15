@@ -43,12 +43,10 @@ const { fetch } = require('bcfetch');
 
 const operations = [
   {
-    name: 'user_data',
     type: 'http-get',
     params: { url: 'https://jsonplaceholder.typicode.com/users/1' }
   },
   {
-    name: 'usdc_balance',
     type: 'balanceOf',
     params: {
       chainid: 1,
@@ -57,12 +55,10 @@ const operations = [
     }
   },
   {
-    name: 'btc_price',
     type: 'binance',
     params: { symbol: 'BTCUSDT' }
   },
   {
-    name: 'weth_usdc_price',
     type: 'lpPrice',
     params: {
       chainid: 1,
@@ -75,7 +71,8 @@ const operations = [
 async function main() {
   try {
     const results = await fetch(operations);
-    console.log(results);
+    console.log('Results:', results);
+    // results is now an array of strings in the same order as operations
   } catch (error) {
     console.error('Error:', error.message);
   }
@@ -94,12 +91,10 @@ const { fetch } = require('bcfetch/browser-compatible');
 
 const operations = [
   {
-    name: 'btc_price',
     type: 'binance',
     params: { symbol: 'BTCUSDT' }
   },
   {
-    name: 'eth_balance',
     type: 'balanceOf',
     params: {
       chainid: 1,
@@ -112,7 +107,8 @@ const operations = [
 async function fetchData() {
   try {
     const results = await fetch(operations);
-    console.log(results);
+    console.log('Results:', results);
+    // results is now an array of strings in the same order as operations
   } catch (error) {
     console.error('Error:', error.message);
   }
@@ -136,7 +132,6 @@ Perform HTTP GET requests.
 **Example:**
 ```javascript
 {
-  name: 'api_data',
   type: 'http-get',
   params: { url: 'https://api.example.com/data' }
 }
@@ -152,7 +147,6 @@ Perform HTTP POST requests.
 **Example:**
 ```javascript
 {
-  name: 'create_user',
   type: 'http-post',
   params: {
     url: 'https://api.example.com/users',
@@ -181,7 +175,6 @@ Get ERC20 token balance or Bitcoin balance.
 ```javascript
 // ERC20 token balance
 {
-  name: 'usdc_balance',
   type: 'balanceOf',
   params: {
     chainid: 1,
@@ -192,7 +185,6 @@ Get ERC20 token balance or Bitcoin balance.
 
 // Bitcoin balance
 {
-  name: 'btc_balance',
   type: 'balanceOf',
   params: {
     chainid: 'BTC',
@@ -212,7 +204,6 @@ Get cryptocurrency prices from Binance API.
 **Example:**
 ```javascript
 {
-  name: 'btc_price',
   type: 'binance',
   params: { symbol: 'BTCUSDT' }
 }
@@ -232,7 +223,6 @@ Calculate AMM LP token prices for Uniswap and other AMM protocols.
 ```javascript
 // Calculate USDC/WETH price (token0/token1)
 {
-  name: 'usdc_weth_price',
   type: 'lpPrice',
   params: {
     chainid: 1,
@@ -243,7 +233,6 @@ Calculate AMM LP token prices for Uniswap and other AMM protocols.
 
 // Calculate WETH/USDC price (token1/token0)
 {
-  name: 'weth_usdc_price',
   type: 'lpPrice',
   params: {
     chainid: 1,
@@ -268,7 +257,6 @@ Extract content from web pages using XPath selectors.
 ```javascript
 // Extract text content from a specific element
 {
-  name: 'page_title',
   type: 'xpath',
   params: {
     url: 'https://example.com',
@@ -278,7 +266,6 @@ Extract content from web pages using XPath selectors.
 
 // Extract href attribute from links
 {
-  name: 'main_link',
   type: 'xpath',
   params: {
     url: 'https://example.com',
@@ -289,7 +276,6 @@ Extract content from web pages using XPath selectors.
 
 // Extract multiple elements' text content
 {
-  name: 'all_titles',
   type: 'xpath',
   params: {
     url: 'https://example.com',
@@ -299,7 +285,6 @@ Extract content from web pages using XPath selectors.
 
 // Extract content from dynamic page (with wait time)
 {
-  name: 'dynamic_content',
   type: 'xpath',
   params: {
     url: 'https://transcription.bihelix.io/zh',
@@ -319,22 +304,23 @@ Execute multiple operations concurrently and return results in the same order.
 - `operations` (Array): Array of operation objects
 
 **Returns:**
-- `Promise<Array>`: Array of result objects with operation names as keys
+- `Promise<Array<string>>`: Array of string results in the same order as input operations
 
 **Operation Object Structure:**
 ```javascript
 {
-  name: string,        // Unique name for the operation
   type: string,        // Operation type (http-get, http-post, balanceOf, binance, lpPrice, xpath)
   params: object       // Operation-specific parameters
 }
 ```
 
-**Result Object Structure:**
+**Result Array Structure:**
 ```javascript
-{
-  [operationName]: resultValue  // Key is the operation name, value is the result
-}
+[
+  "result1",  // First operation result
+  "result2",  // Second operation result
+  // ... more results in order
+]
 ```
 
 ## Error Handling
@@ -356,14 +342,12 @@ const { fetch } = require('bcfetch');
 const operations = [
   // HTTP GET request
   {
-    name: 'user_profile',
     type: 'http-get',
     params: { url: 'https://jsonplaceholder.typicode.com/users/1' }
   },
   
   // HTTP POST request
   {
-    name: 'create_post',
     type: 'http-post',
     params: {
       url: 'https://jsonplaceholder.typicode.com/posts',
@@ -373,7 +357,6 @@ const operations = [
   
   // ERC20 token balance
   {
-    name: 'usdc_balance',
     type: 'balanceOf',
     params: {
       chainid: 1,
@@ -384,7 +367,6 @@ const operations = [
   
   // Bitcoin balance
   {
-    name: 'btc_balance',
     type: 'balanceOf',
     params: {
       chainid: 'BTC',
@@ -394,14 +376,12 @@ const operations = [
   
   // Cryptocurrency price
   {
-    name: 'eth_price',
     type: 'binance',
     params: { symbol: 'ETHUSDT' }
   },
   
   // AMM LP price
   {
-    name: 'weth_usdc_price',
     type: 'lpPrice',
     params: {
       chainid: 1,
@@ -412,7 +392,6 @@ const operations = [
   
   // XPath scraping
   {
-    name: 'page_title',
     type: 'xpath',
     params: {
       url: 'https://example.com',
@@ -428,10 +407,8 @@ async function main() {
     const results = await fetch(operations);
     
     console.log('All operations completed successfully!');
-    results.forEach((result, index) => {
-      const name = Object.keys(result)[0];
-      const value = result[name];
-      console.log(`${name}:`, value);
+    results.forEach((value, index) => {
+      console.log(`Result ${index + 1}:`, value);
     });
     
   } catch (error) {
@@ -451,7 +428,6 @@ const { fetch } = require('bcfetch');
 const portfolioOperations = [
   // Token balances
   {
-    name: 'usdc_balance',
     type: 'balanceOf',
     params: {
       chainid: 1,
@@ -460,7 +436,6 @@ const portfolioOperations = [
     }
   },
   {
-    name: 'weth_balance',
     type: 'balanceOf',
     params: {
       chainid: 1,
@@ -471,19 +446,16 @@ const portfolioOperations = [
   
   // Current prices
   {
-    name: 'usdc_price',
     type: 'binance',
     params: { symbol: 'USDCUSDT' }
   },
   {
-    name: 'eth_price',
     type: 'binance',
     params: { symbol: 'ETHUSDT' }
   },
   
   // LP token prices
   {
-    name: 'usdc_weth_lp_price',
     type: 'lpPrice',
     params: {
       chainid: 1,
@@ -498,10 +470,10 @@ async function checkPortfolio() {
     const results = await fetch(portfolioOperations);
     
     // Calculate portfolio value
-    const usdcBalance = parseFloat(results[0].usdc_balance);
-    const wethBalance = parseFloat(results[1].weth_balance);
-    const usdcPrice = parseFloat(results[2].usdc_price);
-    const ethPrice = parseFloat(results[3].eth_price);
+    const usdcBalance = parseFloat(results[0]);
+    const wethBalance = parseFloat(results[1]);
+    const usdcPrice = parseFloat(results[2]);
+    const ethPrice = parseFloat(results[3]);
     
     const totalValue = (usdcBalance * usdcPrice) + (wethBalance * ethPrice);
     
@@ -509,7 +481,7 @@ async function checkPortfolio() {
     console.log(`USDC: ${usdcBalance.toFixed(2)} ($${(usdcBalance * usdcPrice).toFixed(2)})`);
     console.log(`WETH: ${wethBalance.toFixed(4)} ($${(wethBalance * ethPrice).toFixed(2)})`);
     console.log(`Total Value: $${totalValue.toFixed(2)}`);
-    console.log(`USDC/WETH LP Price: ${results[4].usdc_weth_lp_price}`);
+    console.log(`USDC/WETH LP Price: ${results[4]}`);
     
   } catch (error) {
     console.error('Portfolio check failed:', error.message);
@@ -558,6 +530,12 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
 
 ## Changelog
+
+### v0.5.0
+- **BREAKING CHANGE**: `fetch()` function now returns an array of strings instead of an array of objects
+- Removed `name` field requirement from operation objects
+- Simplified API - results are returned in the same order as input operations
+- Updated all examples and documentation to reflect the new API
 
 ### v0.4.0
 - Added `xpath` operation type for web scraping using XPath selectors

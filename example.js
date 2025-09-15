@@ -3,12 +3,10 @@ const { fetch } = require('./index');
 // 定义一个操作数组
 const operations = [
   {
-    name: 'todo',
     type: 'http-get',
     params: { url: 'https://jsonplaceholder.typicode.com/todos/1' }
   },
   {
-    name: 'new_post',
     type: 'http-post',
     params: {
       url: 'https://jsonplaceholder.typicode.com/posts',
@@ -20,7 +18,6 @@ const operations = [
     }
   },
   {
-    name: 'usdc_balance',
     type: 'balanceOf',
     params: {
       chainid: 1, // 以太坊主网
@@ -29,7 +26,6 @@ const operations = [
     }
   },
   {
-    name: 'cake_balance',
     type: 'balanceOf',
     params: {
       chainid: 56, // BNB Chain
@@ -38,27 +34,23 @@ const operations = [
     }
   },
   {
-    name: 'user_data',
     type: 'http-get',
     params: { url: 'https://jsonplaceholder.typicode.com/users/1' }
   },
   {
-    name: 'btc_balance',
     type: 'balanceOf',
     params: {
       chainid: 'BTC',
       address: 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq'
     }
   },
-  {
-    name: 'btcusdt_price',
+  { 
     type: 'binance',
     params: {
       symbol: 'BTCUSDT'
     }
   },
   {
-    name: 'usdc_weth_price',
     type: 'lpPrice',
     params: {
       chainid: 1, // 以太坊主网
@@ -67,7 +59,6 @@ const operations = [
     }
   },
   {
-    name: 'weth_usdc_price',
     type: 'lpPrice',
     params: {
       chainid: 1, // 以太坊主网
@@ -76,7 +67,6 @@ const operations = [
     }
   },
   {
-    name: 'github_title',
     type: 'xpath',
     params: {
       url: 'https://github.com',
@@ -84,7 +74,6 @@ const operations = [
     }
   },
   {
-    name: 'github_links',
     type: 'xpath',
     params: {
       url: 'https://github.com',
@@ -93,7 +82,6 @@ const operations = [
     }
   },
   {
-    "name": "Transcription TVL",
     "type": "xpath",
     "params": {
       "url": "https://transcription.bihelix.io/zh",
@@ -109,11 +97,11 @@ async function main() {
   try {
     const results = await fetch(operations);
     console.log('所有操作成功完成！');
+    console.log(results);
     console.log('结果:');
-    results.forEach((result, index) => {
-      const name = Object.keys(result)[0];
-      const value = result[name];
-      console.log(`--- 操作 ${index + 1} (name: ${name}, type: ${operations[index].type}) 的结果 ---`);
+    results.forEach((value, index) => {
+      const operation = operations[index];
+      console.log(`--- 操作 ${index + 1} (type: ${operation.type}) 的结果 ---`);
       // 尝试将结果解析为JSON以美化输出，如果失败则直接打印字符串
       try {
         console.log(JSON.parse(value));
