@@ -1,7 +1,7 @@
 // 浏览器环境使用示例
 
-// 在浏览器中，使用 browser-compatible.js 版本
-const { fetch } = require('./browser-compatible');
+// 在浏览器中，使用统一的 index.js 版本
+const { fetch } = require('./index');
 
 // 示例1: HTTP GET 请求
 const httpGetExample = [
@@ -89,22 +89,6 @@ async function runBrowserExamples() {
     }
     console.log('\n');
     
-    // 测试 xpath 功能（应该失败）
-    console.log('🔍 XPath 功能测试（应该失败）:');
-    try {
-      const xpathExample = [
-        {
-          type: 'xpath',
-          params: {
-            url: 'https://example.com',
-            xpath: '//title'
-          }
-        }
-      ];
-      await fetch(xpathExample);
-    } catch (error) {
-      console.log('✅ 预期的错误:', error.message);
-    }
     
   } catch (error) {
     console.error('❌ 示例运行失败:', error.message);

@@ -11,7 +11,6 @@ A powerful library to perform multiple fetch operations based on type, including
 - 🔗 **Blockchain Integration**: Balance queries for ERC20 tokens and Bitcoin, smart contract calls
 - 💰 **Price Data**: Binance API integration for cryptocurrency prices
 - 🏦 **AMM Support**: Calculate LP token prices for Uniswap and other AMM protocols
-- 🎯 **XPath Support**: Extract content from web pages using XPath selectors (Node.js only)
 - ⚡ **Concurrent Execution**: All operations run in parallel for maximum performance
 - 🔧 **Type-based**: Easy to extend with new operation types
 
@@ -21,18 +20,10 @@ A powerful library to perform multiple fetch operations based on type, including
 npm install bcfetch
 ```
 
-### Optional Dependencies
-
-For XPath functionality (Node.js only), you may need to install Puppeteer:
-
-```bash
-npm install puppeteer
-```
-
 ## Environment Support
 
-- **Node.js**: Full functionality including XPath support
-- **Browser**: All features except XPath (requires Puppeteer)
+- **Node.js**: Full functionality
+- **Browser**: All features
 
 ## Quick Start
 
@@ -117,7 +108,6 @@ async function fetchData() {
 fetchData();
 ```
 
-**Note**: XPath operations are not available in browser environments as they require Puppeteer.
 
 ## Supported Operations
 
@@ -292,57 +282,6 @@ Calculate AMM LP token prices for Uniswap and other AMM protocols.
 }
 ```
 
-### Web Scraping Operations
-
-#### `xpath`
-Extract content from web pages using XPath selectors.
-
-**Parameters:**
-- `url` (string): The URL of the web page to scrape
-- `xpath` (string): XPath selector to find elements
-- `attribute` (string, optional): Specific attribute to extract (e.g., 'href', 'src', 'class'). If not provided, returns text content.
-- `waitFor` (number, optional): Wait time in milliseconds for dynamic content to load (default: 3000ms)
-
-**Example:**
-```javascript
-// Extract text content from a specific element
-{
-  type: 'xpath',
-  params: {
-    url: 'https://example.com',
-    xpath: '//h1[@class="title"]'
-  }
-}
-
-// Extract href attribute from links
-{
-  type: 'xpath',
-  params: {
-    url: 'https://example.com',
-    xpath: '//a[@class="main-link"]',
-    attribute: 'href'
-  }
-}
-
-// Extract multiple elements' text content
-{
-  type: 'xpath',
-  params: {
-    url: 'https://example.com',
-    xpath: '//h2'
-  }
-}
-
-// Extract content from dynamic page (with wait time)
-{
-  type: 'xpath',
-  params: {
-    url: 'https://transcription.bihelix.io/zh',
-    xpath: '/html/body/div[1]/div[2]/div/div[1]/div[1]/div[3]/div[1]/div[1]/div[2]',
-    waitFor: 5000
-  }
-}
-```
 
 ## API Reference
 
@@ -359,7 +298,7 @@ Execute multiple operations concurrently and return results in the same order.
 **Operation Object Structure:**
 ```javascript
 {
-  type: string,        // Operation type (http-get, http-post, balanceOf, call, binance, lpPrice, xpath)
+  type: string,        // Operation type (http-get, http-post, balanceOf, call, binance, lpPrice)
   params: object       // Operation-specific parameters
 }
 ```
@@ -450,14 +389,6 @@ const operations = [
     }
   },
   
-  // XPath scraping
-  {
-    type: 'xpath',
-    params: {
-      url: 'https://example.com',
-      xpath: '//h1'
-    }
-  }
 ];
 
 async function main() {
@@ -604,7 +535,6 @@ This project is licensed under the ISC License - see the [LICENSE](LICENSE) file
 - Updated all examples and documentation to reflect the new API
 
 ### v0.4.0
-- Added `xpath` operation type for web scraping using XPath selectors
 - Added support for extracting text content and attributes from web pages
 - Added cheerio dependency for HTML parsing
 

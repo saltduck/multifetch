@@ -66,29 +66,6 @@ const operations = [
       reverse: true // 计算 WETH/USDC 价格 (token1/token0)
     }
   },
-  {
-    type: 'xpath',
-    params: {
-      url: 'https://github.com',
-      xpath: '//h1'
-    }
-  },
-  {
-    type: 'xpath',
-    params: {
-      url: 'https://github.com',
-      xpath: '//a[@class="HeaderMenu-link"]',
-      attribute: 'href'
-    }
-  },
-  {
-    "type": "xpath",
-    "params": {
-      "url": "https://transcription.bihelix.io/zh",
-      "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[1]/div[3]/div[1]/div[1]/div[2]",
-      "waitFor": 5000
-    }
-  }
 ];
 
 // 异步执行函数并处理结果
