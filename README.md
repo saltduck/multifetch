@@ -8,7 +8,7 @@ A powerful library to perform multiple fetch operations based on type, including
 ## Features
 
 - 🌐 **HTTP Operations**: GET and POST requests
-- 🔗 **Blockchain Integration**: Balance queries for ERC20 tokens and Bitcoin
+- 🔗 **Blockchain Integration**: Balance queries for ERC20 tokens and Bitcoin, smart contract calls
 - 💰 **Price Data**: Binance API integration for cryptocurrency prices
 - 🏦 **AMM Support**: Calculate LP token prices for Uniswap and other AMM protocols
 - 🎯 **XPath Support**: Extract content from web pages using XPath selectors (Node.js only)
@@ -193,6 +193,56 @@ Get ERC20 token balance or Bitcoin balance.
 }
 ```
 
+#### `call`
+Execute smart contract calls using raw hex data.
+
+**Parameters:**
+- `chainid` (number): Chain ID (1 for Ethereum, 56 for BSC, 137 for Polygon)
+- `contract` (string): Smart contract address
+- `data` (string): Raw hex data for the contract call (with or without 0x prefix)
+
+**Supported Chains:**
+- Ethereum Mainnet (1)
+- Binance Smart Chain (56)
+- Polygon (137)
+
+**Example:**
+```javascript
+// Call ERC20 token name() method
+// Function selector for name() is 0x06fdde03
+{
+  type: 'call',
+  params: {
+    chainid: 1,
+    contract: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+    data: '0x06fdde03'
+  }
+}
+
+// Call ERC20 token symbol() method
+// Function selector for symbol() is 0x95d89b41
+{
+  type: 'call',
+  params: {
+    chainid: 1,
+    contract: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+    data: '0x95d89b41'
+  }
+}
+
+// Call ERC20 token balanceOf(address) method
+// Function selector for balanceOf(address) is 0x70a08231
+// Parameter: 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
+{
+  type: 'call',
+  params: {
+    chainid: 1,
+    contract: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+    data: '0x70a08231000000000000000000000000d8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+  }
+}
+```
+
 ### Price Operations
 
 #### `binance`
@@ -309,7 +359,7 @@ Execute multiple operations concurrently and return results in the same order.
 **Operation Object Structure:**
 ```javascript
 {
-  type: string,        // Operation type (http-get, http-post, balanceOf, binance, lpPrice, xpath)
+  type: string,        // Operation type (http-get, http-post, balanceOf, call, binance, lpPrice, xpath)
   params: object       // Operation-specific parameters
 }
 ```
@@ -362,6 +412,16 @@ const operations = [
       chainid: 1,
       contract: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
       address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+    }
+  },
+  
+  // Smart contract call
+  {
+    type: 'call',
+    params: {
+      chainid: 1,
+      contract: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+      data: '0x06fdde03' // name() function selector
     }
   },
   
@@ -530,6 +590,12 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
 
 ## Changelog
+
+### v0.6.0
+- **NEW**: Added `call` operation type for smart contract calls using raw hex data
+- Added support for direct contract calls with 16-bit hex data strings
+- Added automatic 0x prefix handling for hex data
+- Enhanced error handling for hex data validation
 
 ### v0.5.0
 - **BREAKING CHANGE**: `fetch()` function now returns an array of strings instead of an array of objects

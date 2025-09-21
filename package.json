@@ -1,7 +1,7 @@
 {
   "name": "bcfetch",
-  "version": "1.0.1",
-  "description": "A Node.js library to perform multiple fetch operations based on type, including AMM LP token price calculations.",
+  "version": "1.1.0",
+  "description": "A Node.js library to perform multiple fetch operations based on type, including HTTP requests, blockchain data fetching, smart contract calls, and AMM LP token price calculations.",
   "main": "index.js",
   "browser": "browser-compatible.js",
   "scripts": {
@@ -13,11 +13,16 @@
     "http",
     "blockchain",
     "balanceOf",
+    "call",
+    "smart-contract",
     "lpPrice",
     "AMM",
     "liquidity",
     "uniswap",
-    "defi"
+    "defi",
+    "ethereum",
+    "bsc",
+    "polygon"
   ],
   "author": "Gemini",
   "license": "ISC",

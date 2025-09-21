@@ -231,6 +231,50 @@ async function fetch(operations) {
         }
       }
 
+      case 'call': {
+        const { chainid, contract, data } = operation.params || {};
+        if (!chainid || !contract || !data) {
+          throw new Error('call 操作需要 "chainid"、"contract" 和 "data" 参数。');
+        }
+
+        const provider = providers[chainid];
+        if (!provider) {
+          throw new Error(`不支持的 chainid: "${chainid}"。支持的 chainid 有: ${Object.keys(providers).join(', ')}.`);
+        }
+
+        try {
+          // 验证 data 是否为有效的16进制字符串
+          if (typeof data !== 'string') {
+            throw new Error('data 参数必须是16进制字符串');
+          }
+          
+          // 确保 data 以 0x 开头
+          const hexData = data.startsWith('0x') ? data : `0x${data}`;
+          
+          // 验证16进制格式
+          if (!/^0x[0-9a-fA-F]+$/.test(hexData)) {
+            throw new Error('data 参数必须是有效的16进制字符串');
+          }
+
+          // 使用 provider.call 方法直接调用合约
+          const result = await provider.call({
+            to: contract,
+            data: hexData
+          });
+          
+          // 返回结果
+          value = {
+            contract: contract,
+            chainid: chainid,
+            data: hexData,
+            result: result
+          };
+          break;
+        } catch (error) {
+          throw new Error(`在链 ${chainid} 上调用合约 ${contract} 失败: ${error.message}`);
+        }
+      }
+
       case 'xpath': {
         const { url, xpath, attribute, waitFor = 5000 } = operation.params || {};
         if (!url || !xpath) {
