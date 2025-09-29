@@ -20,11 +20,19 @@ const erc20Abi = [
   "function decimals() view returns (uint8)",
 ];
 
-// AMM LP 合约所需的 ABI
+// AMM LP 合约所需的 ABI (Uniswap V2)
 const lpAbi = [
   "function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
   "function token0() view returns (address)",
   "function token1() view returns (address)",
+];
+
+// Uniswap V3 池合约所需的 ABI
+const lpV3Abi = [
+  "function slot0() view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)",
+  "function token0() view returns (address)",
+  "function token1() view returns (address)",
+  "function fee() view returns (uint24)",
 ];
 
 /**
@@ -176,7 +184,7 @@ async function fetch(operations) {
       }
 
       case 'lpPrice': {
-        const { chainid, contract, reverse } = operation.params || {};
+        const { chainid, contract, reverse, version = 2 } = operation.params || {};
         if (!chainid || !contract) {
           throw new Error('lpPrice 操作需要 "chainid" 和 "contract" 参数。');
         }
@@ -187,41 +195,106 @@ async function fetch(operations) {
         }
 
         try {
-          const lpContract = new ethers.Contract(contract, lpAbi, provider);
-          
-          // 并发获取储备量和代币地址
-          const [reserves, token0Address, token1Address] = await Promise.all([
-            lpContract.getReserves(),
-            lpContract.token0(),
-            lpContract.token1()
-          ]);
+          if (version === 3) {
+            // Uniswap V3 价格计算（纯 BigInt 分数计算，避免 BigInt 与 Number 混用）
+            const lpContract = new ethers.Contract(contract, lpV3Abi, provider);
+            
+            // 并发获取 slot0 数据和代币地址
+            const [slot0Data, token0Address, token1Address] = await Promise.all([
+              lpContract.slot0(),
+              lpContract.token0(),
+              lpContract.token1()
+            ]);
 
-          const { reserve0, reserve1 } = reserves;
-          
-          // 获取代币的小数位数
-          const token0Contract = new ethers.Contract(token0Address, erc20Abi, provider);
-          const token1Contract = new ethers.Contract(token1Address, erc20Abi, provider);
-          
-          const [token0Decimals, token1Decimals] = await Promise.all([
-            token0Contract.decimals(),
-            token1Contract.decimals()
-          ]);
+            const { sqrtPriceX96 } = slot0Data;
+            
+            // 获取代币的小数位数
+            const token0Contract = new ethers.Contract(token0Address, erc20Abi, provider);
+            const token1Contract = new ethers.Contract(token1Address, erc20Abi, provider);
+            
+            const [d0Raw, d1Raw] = await Promise.all([
+              token0Contract.decimals(),
+              token1Contract.decimals()
+            ]);
+            const d0 = Number(d0Raw);
+            const d1 = Number(d1Raw);
 
-          // 计算调整后的储备量（考虑小数位数）
-          const adjustedReserve0 = Number(ethers.formatUnits(reserve0, token0Decimals));
-          const adjustedReserve1 = Number(ethers.formatUnits(reserve1, token1Decimals));
+            // price1_per_0 = (sqrtPriceX96^2 / 2^192) * 10^(d0 - d1)
+            const numeratorBase = (sqrtPriceX96 * sqrtPriceX96);
+            const denominatorBase = (1n << 192n);
 
-          // 根据 reverse 参数计算价格
-          let price;
-          if (reverse === true) {
-            // token1/token0 的价格
-            price = adjustedReserve1 / adjustedReserve0;
+            // 根据小数位差异进行 10^diff 调整
+            const decimalsDiff = d0 - d1; // 可能为负数
+            let num = numeratorBase;
+            let den = denominatorBase;
+            if (decimalsDiff > 0) {
+              num = num * (10n ** BigInt(decimalsDiff));
+            } else if (decimalsDiff < 0) {
+              den = den * (10n ** BigInt(-decimalsDiff));
+            }
+
+            // 将分数转换为带精度的小数字符串
+            const toDecimalString = (n, d, precision) => {
+              const scaled = (n * (10n ** BigInt(precision))) / d;
+              const s = scaled.toString();
+              if (precision === 0) return s;
+              const i = s.length > precision ? s.slice(0, -precision) : '0';
+              const f = s.length > precision ? s.slice(-precision) : s.padStart(precision, '0');
+              // 去除尾部多余的 0
+              const fTrimmed = f.replace(/0+$/, '');
+              return fTrimmed.length ? `${i}.${fTrimmed}` : i;
+            };
+
+            const PRECISION = 18; // 输出 18 位精度
+
+            let resultStr;
+            if (reverse === true) {
+              // reverse=true: 需要 token1/token0 价格 = num/den
+              resultStr = toDecimalString(num, den, PRECISION);
+            } else {
+              // reverse=false: 需要 token0/token1 价格 = den/num
+              resultStr = toDecimalString(den, num, PRECISION);
+            }
+
+            value = resultStr;
           } else {
-            // token0/token1 的价格
-            price = adjustedReserve0 / adjustedReserve1;
-          }
+            // Uniswap V2 价格计算（原有逻辑）
+            const lpContract = new ethers.Contract(contract, lpAbi, provider);
+            
+            // 并发获取储备量和代币地址
+            const [reserves, token0Address, token1Address] = await Promise.all([
+              lpContract.getReserves(),
+              lpContract.token0(),
+              lpContract.token1()
+            ]);
 
-          value = price.toString();
+            const { reserve0, reserve1 } = reserves;
+            
+            // 获取代币的小数位数
+            const token0Contract = new ethers.Contract(token0Address, erc20Abi, provider);
+            const token1Contract = new ethers.Contract(token1Address, erc20Abi, provider);
+            
+            const [token0Decimals, token1Decimals] = await Promise.all([
+              token0Contract.decimals(),
+              token1Contract.decimals()
+            ]);
+
+            // 计算调整后的储备量（考虑小数位数）
+            const adjustedReserve0 = Number(ethers.formatUnits(reserve0, token0Decimals));
+            const adjustedReserve1 = Number(ethers.formatUnits(reserve1, token1Decimals));
+
+            // 根据 reverse 参数计算价格
+            let price;
+            if (reverse === true) {
+              // token1/token0 的价格
+              price = adjustedReserve1 / adjustedReserve0;
+            } else {
+              // token0/token1 的价格
+              price = adjustedReserve0 / adjustedReserve1;
+            }
+
+            value = price.toString();
+          }
           break;
         } catch (error) {
           throw new Error(`在链 ${chainid} 上为 LP 合约 ${contract} 计算价格失败: ${error.message}`);

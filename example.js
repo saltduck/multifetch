@@ -66,6 +66,24 @@ const operations = [
       reverse: true // 计算 WETH/USDC 价格 (token1/token0)
     }
   },
+  {
+    type: 'lpPrice',
+    params: {
+      chainid: 1, // 以太坊主网
+      contract: '0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640', // USDC/WETH Uniswap V3 LP 合约 (0.05% fee tier)
+      reverse: false, // 计算 USDC/WETH 价格 (token0/token1)
+      version: 3 // 使用 Uniswap V3 计算方式
+    }
+  },
+  {
+    type: 'lpPrice',
+    params: {
+      chainid: 1, // 以太坊主网
+      contract: '0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640', // USDC/WETH Uniswap V3 LP 合约 (0.05% fee tier)
+      reverse: true, // 计算 WETH/USDC 价格 (token1/token0)
+      version: 3 // 使用 Uniswap V3 计算方式
+    }
+  },
 ];
 
 // 异步执行函数并处理结果
