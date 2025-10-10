@@ -13,6 +13,7 @@ A powerful library to perform multiple fetch operations based on type, including
 - 🏦 **AMM Support**: Calculate LP token prices for Uniswap and other AMM protocols
 - ⚡ **Concurrent Execution**: All operations run in parallel for maximum performance
 - 🔧 **Type-based**: Easy to extend with new operation types
+- 🔄 **Postprocess Support**: Flexible data transformation and formatting with chainable operations
 
 ## Installation
 
@@ -108,6 +109,101 @@ async function fetchData() {
 fetchData();
 ```
 
+
+## Postprocess Feature
+
+The `postprocess` parameter allows you to transform and format data after fetching it. It supports various operations that can be chained together for complex data processing.
+
+### Supported Postprocess Operations
+
+#### JSON Data Extraction
+Extract values from JSON responses using dot notation.
+
+**Syntax:** `json:path.to.property`
+
+**Examples:**
+- `json:data.floor_price` - Extract `data.floor_price` value
+- `json:0.airdrop_stake_counts` - Extract `airdrop_stake_counts` from first array element
+
+#### Mathematical Operations
+Perform mathematical calculations on numeric data.
+
+**Division:** `div:number`
+- Example: `div:100000000` - Divide by 100000000 (common for unit conversion)
+
+**Multiplication:** `mul:number`
+- Example: `mul:100` - Multiply by 100
+
+**Addition:** `add:number`
+- Example: `add:1000` - Add 1000
+
+**Subtraction:** `sub:number`
+- Example: `sub:500` - Subtract 500
+
+#### Data Type Conversion
+Convert data to different types.
+
+**Number Conversion:** `toNumber`
+- Converts string to number
+- Example: "123" → 123
+
+#### Object Property Extraction
+Extract properties from objects using dot notation.
+
+**Syntax:** `object:path.to.property`
+
+**Example:** `object:result` - Extract `result` property
+
+### Chainable Operations
+
+You can chain multiple operations together using an array:
+
+```javascript
+{
+  type: 'http-get',
+  params: {
+    url: 'https://api.example.com/data',
+    postprocess: ['json:data.price', 'toNumber', 'div:100000000']
+  }
+}
+```
+
+### Postprocess Examples
+
+#### Simple JSON Extraction
+```javascript
+{
+  type: 'http-post',
+  params: {
+    url: 'https://api.example.com/stake',
+    postprocess: 'json:amount'
+  }
+}
+```
+
+#### Chainable Operations
+```javascript
+{
+  type: 'call',
+  params: {
+    chainid: 56,
+    contract: '0x5fC1c0121Cd0438f78e31EA20422c09eaFfcC068',
+    data: '0x6a8a5f3d0000000000000000000000000000000000000000000000000000000000000000',
+    postprocess: ['object:result', 'toNumber', 'div:100']
+  }
+}
+```
+
+#### Complex Data Processing
+```javascript
+{
+  type: 'http-get',
+  params: {
+    url: 'https://bazaar-api.example.com/api/assets/asset-id',
+    postprocess: ['json:data.floor_price', 'div:100000000']
+  }
+}
+```
 
 ## Supported Operations
 
@@ -521,6 +617,16 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
 
 ## Changelog
+
+### v1.4.0
+- **NEW**: Added `postprocess` parameter for data transformation and formatting
+- Added JSON data extraction with dot notation (`json:path.to.property`)
+- Added mathematical operations (`div:number`, `mul:number`, `add:number`, `sub:number`)
+- Added data type conversion (`toNumber`)
+- Added object property extraction (`object:path.to.property`)
+- Added support for chainable operations using arrays
+- Enhanced error handling for postprocess operations
+- All operation types now support postprocess parameter
 
 ### v0.6.0
 - **NEW**: Added `call` operation type for smart contract calls using raw hex data

@@ -6,6 +6,204 @@ const cheerio = require('cheerio');
 const isBrowser = typeof window !== 'undefined';
 const isNode = typeof process !== 'undefined' && process.versions && process.versions.node;
 
+/**
+ * 后处理函数，用于对原始数据进行转换和格式化
+ * @param {any} data - 原始数据
+ * @param {string|Array} postprocess - 后处理配置，可以是字符串或数组
+ * @returns {any} 处理后的数据
+ */
+function processData(data, postprocess) {
+  if (!postprocess) {
+    return data;
+  }
+
+  try {
+    // 将单个操作转换为数组
+    const operations = Array.isArray(postprocess) ? postprocess : [postprocess];
+    
+    let result = data;
+    
+    // 按顺序执行每个操作
+    for (const operation of operations) {
+      if (typeof operation !== 'string') {
+        console.warn('Postprocess 操作必须是字符串:', operation);
+        continue;
+      }
+      
+      result = executeOperation(result, operation);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Postprocess 处理失败:', error.message);
+    return data; // 处理失败时返回原始数据
+  }
+}
+
+/**
+ * 执行单个后处理操作
+ * @param {any} data - 当前数据
+ * @param {string} operation - 操作字符串
+ * @returns {any} 处理后的数据
+ */
+function executeOperation(data, operation) {
+  if (typeof operation !== 'string') {
+    throw new Error('操作必须是字符串');
+  }
+
+  // JSON 数据提取
+  if (operation.startsWith('json:')) {
+    return extractJsonData(data, operation.substring(5));
+  }
+  
+  // 对象属性提取
+  if (operation.startsWith('object:')) {
+    return extractObjectProperty(data, operation.substring(7));
+  }
+  
+  // 数学运算
+  if (operation.startsWith('div:')) {
+    return performMathOperation(data, 'div', parseFloat(operation.substring(4)));
+  }
+  
+  if (operation.startsWith('mul:')) {
+    return performMathOperation(data, 'mul', parseFloat(operation.substring(4)));
+  }
+  
+  if (operation.startsWith('add:')) {
+    return performMathOperation(data, 'add', parseFloat(operation.substring(4)));
+  }
+  
+  if (operation.startsWith('sub:')) {
+    return performMathOperation(data, 'sub', parseFloat(operation.substring(4)));
+  }
+  
+  // 数据类型转换
+  if (operation === 'toNumber') {
+    return convertToNumber(data);
+  }
+  
+  throw new Error(`不支持的操作类型: ${operation}`);
+}
+
+/**
+ * 从 JSON 数据中提取指定路径的值
+ * @param {any} data - 原始数据
+ * @param {string} path - 路径，如 "data.floor_price" 或 "0.airdrop_stake_counts"
+ * @returns {any} 提取的值
+ */
+function extractJsonData(data, path) {
+  try {
+    // 如果数据是字符串，尝试解析为 JSON
+    let jsonData = data;
+    if (typeof data === 'string') {
+      jsonData = JSON.parse(data);
+    }
+    
+    // 按路径提取数据
+    const pathParts = path.split('.');
+    let result = jsonData;
+    
+    for (const part of pathParts) {
+      if (result === null || result === undefined) {
+        return null;
+      }
+      
+      // 检查是否是数组索引
+      if (!isNaN(part)) {
+        result = result[parseInt(part)];
+      } else {
+        result = result[part];
+      }
+    }
+    
+    return result;
+  } catch (error) {
+    throw new Error(`JSON 数据提取失败: ${error.message}`);
+  }
+}
+
+/**
+ * 从对象中提取指定路径的属性值
+ * @param {any} data - 原始数据
+ * @param {string} path - 路径，如 "result" 或 "data.value"
+ * @returns {any} 提取的值
+ */
+function extractObjectProperty(data, path) {
+  try {
+    const pathParts = path.split('.');
+    let result = data;
+    
+    for (const part of pathParts) {
+      if (result === null || result === undefined) {
+        return null;
+      }
+      
+      result = result[part];
+    }
+    
+    return result;
+  } catch (error) {
+    throw new Error(`对象属性提取失败: ${error.message}`);
+  }
+}
+
+/**
+ * 执行数学运算
+ * @param {any} data - 当前数据
+ * @param {string} operation - 运算类型 ('div', 'mul', 'add', 'sub')
+ * @param {number} operand - 操作数
+ * @returns {number} 运算结果
+ */
+function performMathOperation(data, operation, operand) {
+  if (isNaN(operand)) {
+    throw new Error(`无效的操作数: ${operand}`);
+  }
+  
+  const num = convertToNumber(data);
+  if (isNaN(num)) {
+    throw new Error(`无法将数据转换为数字: ${data}`);
+  }
+  
+  switch (operation) {
+    case 'div':
+      return num / operand;
+    case 'mul':
+      return num * operand;
+    case 'add':
+      return num + operand;
+    case 'sub':
+      return num - operand;
+    default:
+      throw new Error(`不支持的数学运算: ${operation}`);
+  }
+}
+
+/**
+ * 将数据转换为数字
+ * @param {any} data - 原始数据
+ * @returns {number} 转换后的数字
+ */
+function convertToNumber(data) {
+  if (typeof data === 'number') {
+    return data;
+  }
+  
+  if (typeof data === 'string') {
+    const num = parseFloat(data);
+    if (isNaN(num)) {
+      throw new Error(`无法将字符串转换为数字: ${data}`);
+    }
+    return num;
+  }
+  
+  if (typeof data === 'boolean') {
+    return data ? 1 : 0;
+  }
+  
+  throw new Error(`不支持的数据类型转换为数字: ${typeof data}`);
+}
+
 
 // 支持的链ID到公共RPC节点的映射
 const providers = {
@@ -76,6 +274,8 @@ async function fetch(operations) {
             throw new Error(`HTTP 错误！状态: ${response.status}`);
           }
           value = await response.text();
+          // 应用 postprocess
+          value = processData(value, operation.params.postprocess);
           break;
         } catch (error) {
           throw new Error(`请求 ${operation.params.url} 失败: ${error.message}`);
@@ -98,6 +298,8 @@ async function fetch(operations) {
             throw new Error(`HTTP 错误！状态: ${response.status}`);
           }
           value = await response.text();
+          // 应用 postprocess
+          value = processData(value, operation.params.postprocess);
           break;
         } catch (error) {
           throw new Error(`向 ${operation.params.url} 发送 POST 请求失败: ${error.message}`);
@@ -130,6 +332,8 @@ async function fetch(operations) {
             const totalBalanceInSatoshi = confirmedBalance + unconfirmedBalance;
             const totalBalanceInBTC = totalBalanceInSatoshi / 100000000;
             value = totalBalanceInBTC.toFixed(8); // 转换为BTC并保留8位小数
+            // 应用 postprocess
+            value = processData(value, operation.params.postprocess);
             break;
           } catch (error) {
             throw new Error(`获取 BTC 地址 ${address} 余额失败: ${error.message}`);
@@ -156,6 +360,8 @@ async function fetch(operations) {
           
           // 根据小数位数格式化余额
           value = ethers.formatUnits(balance, decimals);
+          // 应用 postprocess
+          value = processData(value, operation.params.postprocess);
           break;
         } catch (error) {
           // 增强错误日志
@@ -177,6 +383,8 @@ async function fetch(operations) {
           }
           const data = await response.json();
           value = data.price;
+          // 应用 postprocess
+          value = processData(value, operation.params.postprocess);
           break;
         } catch (error) {
           throw new Error(`获取币安 ${symbol} 价格失败: ${error.message}`);
@@ -295,6 +503,8 @@ async function fetch(operations) {
 
             value = price.toString();
           }
+          // 应用 postprocess
+          value = processData(value, operation.params.postprocess);
           break;
         } catch (error) {
           throw new Error(`在链 ${chainid} 上为 LP 合约 ${contract} 计算价格失败: ${error.message}`);
@@ -339,6 +549,8 @@ async function fetch(operations) {
             data: hexData,
             result: result
           };
+          // 应用 postprocess
+          value = processData(value, operation.params.postprocess);
           break;
         } catch (error) {
           throw new Error(`在链 ${chainid} 上调用合约 ${contract} 失败: ${error.message}`);

@@ -1,65 +1,69 @@
-# 发布指南
+# bcfetch 发布指南
 
 ## 当前状态
-- ✅ 代码已提交到 Git
-- ✅ 版本已更新到 1.1.0
-- ✅ 已推送到远程仓库
-- ⏳ 等待 npm 发布
+- ✅ 代码已合并并测试通过
+- ✅ Git提交已完成 (commit: c43c4b3)
+- ✅ 版本已更新到 v1.2.0
+- ✅ Git标签已推送到远程仓库
+- ⏳ 等待npm发布（需要一次性密码）
 
-## 完成发布步骤
+## 完成npm发布
 
-### 1. 获取 OTP 代码
-从您的身份验证器应用中获取当前的一次性密码（OTP）。
+由于启用了2FA（双因素认证），需要一次性密码来完成发布：
 
-### 2. 发布到 npm
 ```bash
-npm publish --otp=<您的OTP代码>
+# 方法1: 使用OTP参数
+npm publish --otp=<你的验证码>
+
+# 方法2: 交互式输入
+npm publish
+# 然后输入你的验证码
 ```
 
-### 3. 验证发布
+## 发布内容摘要
+
+### v1.2.0 主要变更
+- 🗑️ **移除xpath功能** - 删除了需要Puppeteer的非浏览器兼容功能
+- 🔄 **合并文件** - 将browser-compatible.js合并到index.js中
+- 📦 **统一入口** - 现在main和browser字段都指向index.js
+- 🧹 **清理依赖** - 移除了Puppeteer相关依赖
+- 📚 **更新文档** - 更新README移除xpath相关内容
+- ✅ **保持兼容** - 所有其他功能完全保留
+
+### 支持的操作类型
+- `http-get` - HTTP GET请求
+- `http-post` - HTTP POST请求  
+- `balanceOf` - 代币余额查询（ERC20 + BTC）
+- `binance` - 币安价格查询
+- `lpPrice` - AMM LP代币价格计算
+- `call` - 智能合约调用
+
+### 环境支持
+- ✅ Node.js环境
+- ✅ 浏览器环境
+- ✅ 统一API接口
+
+## 验证发布
+发布完成后，可以通过以下方式验证：
+
 ```bash
+# 检查版本
 npm view bcfetch version
+
+# 安装测试
+npm install bcfetch@1.2.0
+
+# 测试功能
+node -e "const { fetch } = require('bcfetch'); console.log('✅ 发布成功！');"
 ```
 
-## 新版本特性 (v1.1.0)
+## 回滚计划
+如果发布后发现问题，可以：
 
-### 🆕 新增功能
-- **call 操作类型**: 支持使用原始16进制数据调用智能合约
-- **自动前缀处理**: 自动为16进制数据添加 0x 前缀
-- **多链支持**: 支持 Ethereum、BSC、Polygon 链
-- **错误处理**: 完善的参数验证和错误提示
+1. 修复问题并发布补丁版本 (1.2.1)
+2. 或者回滚到上一个稳定版本 (1.1.0)
 
-### 📝 使用示例
-```javascript
-const { fetch } = require('bcfetch');
-
-const operations = [
-  {
-    type: 'call',
-    params: {
-      chainid: 1,
-      contract: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-      data: '0x06fdde03' // name() 函数选择器
-    }
-  }
-];
-
-const results = await fetch(operations);
-console.log(results);
+```bash
+# 回滚到1.1.0
+npm deprecate bcfetch@1.2.0 "有问题的版本，请使用1.1.0"
 ```
-
-### 📁 新增文件
-- `example-call.js` - 完整的调用示例
-- `example-simple-call.js` - 简化版示例
-
-### 🔧 技术细节
-- 使用 `provider.call()` 方法直接发送原始数据
-- 支持带或不带 0x 前缀的16进制数据
-- 返回16进制格式的结果，需要根据合约ABI解析
-
-## 发布后检查清单
-- [ ] 验证版本号更新
-- [ ] 测试安装新版本
-- [ ] 更新文档链接
-- [ ] 通知用户新功能
-
