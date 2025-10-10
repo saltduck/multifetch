@@ -190,6 +190,17 @@ function convertToNumber(data) {
   }
   
   if (typeof data === 'string') {
+    // 检查是否是十六进制字符串
+    if (data.startsWith('0x') || data.startsWith('0X')) {
+      const hexValue = data.substring(2);
+      const num = parseInt(hexValue, 16);
+      if (isNaN(num)) {
+        throw new Error(`无法将十六进制字符串转换为数字: ${data}`);
+      }
+      return num;
+    }
+    
+    // 尝试解析为普通数字
     const num = parseFloat(data);
     if (isNaN(num)) {
       throw new Error(`无法将字符串转换为数字: ${data}`);
